@@ -164,7 +164,11 @@ class ChatApp {
             <div class="message-time">${new Date().toLocaleTimeString()}</div>
         `;
         this.ui.messagesContainer.appendChild(messageEl);
-        this.ui.messagesContainer.scrollTop = this.ui.messagesContainer.scrollHeight;
+        
+        // Ensure scroll to bottom after message is added
+        setTimeout(() => {
+            this.scrollToBottom();
+        }, 100);
     }
 
     handleSystemMessage(type, message) {
@@ -187,7 +191,11 @@ class ChatApp {
         systemEl.className = 'system-message';
         systemEl.textContent = text;
         this.ui.messagesContainer.appendChild(systemEl);
-        this.ui.messagesContainer.scrollTop = this.ui.messagesContainer.scrollHeight;
+        
+        // Ensure scroll to bottom after system message
+        setTimeout(() => {
+            this.scrollToBottom();
+        }, 100);
     }
 
     updateUserList(users) {
@@ -246,6 +254,16 @@ class ChatApp {
             typingIndicatorElement.style.display = 'block'; // Show the indicator
         } else {
             typingIndicatorElement.style.display = 'none'; // Hide the indicator
+        }
+    }
+
+    // Add new helper method for scrolling
+    scrollToBottom() {
+        if (this.ui.messagesContainer) {
+            this.ui.messagesContainer.scrollTo({
+                top: this.ui.messagesContainer.scrollHeight,
+                behavior: 'smooth'
+            });
         }
     }
 }
