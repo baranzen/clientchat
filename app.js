@@ -13,6 +13,8 @@ class ChatApp {
             typingIndicator: document.getElementById('typingIndicator')
         };
 
+        this.onlineUsers = new Set(); // Store online users
+        this.typingTimeout = null; // Initialize typing timeout
         this.initializeSocket();
         this.initializeEventListeners();
         this.checkExistingSession();
@@ -28,34 +30,72 @@ class ChatApp {
     }
 
     setupSocketEvents() {
-        this.socket.on('connect', () => this.handleConnect());
+        let hasShownConnectionError = false; // Track if connection error has been shown
+
+        // Handle successful connection
+        this.socket.on('connect', () => {
+            this.handleSystemMessage('system', 'Connected to the server.');
+            this.handleConnect();
+            hasShownConnectionError = false; // Reset the flag on successful connection
+        });
+
+        // Handle disconnection
+        this.socket.on('disconnect', () => {
+            this.handleSystemMessage('system', 'Disconnected from the server. Attempting to reconnect...');
+        });
+
+        // Handle connection errors
+        this.socket.on('connect_error', (err) => {
+            if (!hasShownConnectionError) {
+                this.handleSystemMessage('system', 'Unable to connect to the server. Retrying...');
+                hasShownConnectionError = true; // Set the flag to prevent repeated messages
+            }
+        });
+
+        // Handle reconnection attempts
+        this.socket.on('reconnect_attempt', (attempt) => {
+            // No need to show a message here unless it's the first attempt
+            if (attempt === 1) {
+                this.handleSystemMessage('system', 'Attempting to reconnect...');
+            }
+        });
+
+        // Handle successful reconnection
+        this.socket.on('reconnect', () => {
+            this.handleSystemMessage('system', 'Reconnected to the server.');
+        });
+
+        // Handle reconnection failure
+        this.socket.on('reconnect_failed', () => {
+            this.handleSystemMessage('system', 'Failed to reconnect to the server. Please check your connection and try again.');
+        });
+
+        // Handle incoming messages
         this.socket.on('message', (message) => this.appendMessage(message));
+
+        // Handle initial message load
         this.socket.on('findAllMessages', (messages) => this.loadMessages(messages));
         
-        // Kullanıcı listesi güncellemeleri için
-        this.socket.on('join', (users) => {
-            console.log('Received users:', users);
-            // Eğer users bir obje ise, array'e çevir
-            if (users && typeof users === 'object' && !Array.isArray(users)) {
-                users = [users];
-            }
-            this.updateUserList(users);
-        });
-        
-        // Kullanıcı katılma/ayrılma bildirimleri için
+        // Handle user joined notifications
         this.socket.on('userJoined', (name) => {
+            this.onlineUsers.add(name); // Add user to online users
+            this.updateUserList(Array.from(this.onlineUsers)); // Update UI
             this.handleSystemMessage('join', name);
         });
         
+        // Handle user left notifications
         this.socket.on('userLeft', (name) => {
+            this.onlineUsers.delete(name); // Remove user from online users
+            this.updateUserList(Array.from(this.onlineUsers)); // Update UI
             this.handleSystemMessage('leave', name);
         });
 
+        // Handle typing indicators
         this.socket.on('typing', ({ name, isTyping }) => {
             this.showTypingIndicator(name, isTyping);
         });
 
-        // Sayfa yenilendiğinde otomatik çıkış yap
+        // Handle logout on page unload
         window.addEventListener('beforeunload', () => {
             this.handleLogout();
         });
@@ -86,8 +126,10 @@ class ChatApp {
             this.ui.container.classList.remove('hidden');
             this.ui.currentUsername.textContent = username;
             
-            // İsim ile katıl
-            this.socket.emit('join', { name: username });
+            this.socket.emit('join', { name: username }, (users) => {
+                console.log('Users:', users);
+                this.updateUserList(users);
+            });
         }
     }
 
@@ -125,13 +167,22 @@ class ChatApp {
         this.ui.messagesContainer.scrollTop = this.ui.messagesContainer.scrollHeight;
     }
 
-    handleSystemMessage(type, username) {
-        if (!username) return;
-        
-        const text = type === 'join' 
-            ? `${username} joined the chat` 
-            : `${username} left the chat`;
-        
+    handleSystemMessage(type, message) {
+        let text;
+        switch (type) {
+            case 'join':
+                text = `${message} joined the chat`;
+                break;
+            case 'leave':
+                text = `${message} left the chat`;
+                break;
+            case 'system':
+                text = message;
+                break;
+            default:
+                return;
+        }
+
         const systemEl = document.createElement('div');
         systemEl.className = 'system-message';
         systemEl.textContent = text;
@@ -142,50 +193,26 @@ class ChatApp {
     updateUserList(users) {
         console.log('Updating user list with:', users);
         
-        // Eğer users undefined veya null ise
         if (!users) {
             console.error('Users data is undefined or null');
             this.ui.userList.innerHTML = '<li class="no-users">No users online</li>';
             return;
         }
 
-        // Eğer users bir array değilse, array'e çevir
-        if (!Array.isArray(users)) {
-            console.warn('Users data is not an array, converting to array');
-            users = [users];
-        }
-
-        // Mevcut kullanıcıyı filtrele
-        const currentUser = sessionStorage.getItem('username');
-        const filteredUsers = users.filter(user => {
-            // Eğer user bir obje ise, name property'sini al
-            if (typeof user === 'object' && user !== null) {
-                return user.name !== currentUser;
-            }
-            return user !== currentUser;
-        });
-
-        if (filteredUsers.length > 0) {
-            this.ui.userList.innerHTML = filteredUsers.map(user => {
-                // Eğer user bir obje ise, name property'sini al
-                const userName = typeof user === 'object' ? user.name : user;
-                return `
-                    <li class="user-item">
-                        <span class="online-dot"></span>
-                        ${userName}
-                    </li>
-                `;
-            }).join('');
-        } else {
-            this.ui.userList.innerHTML = '<li class="no-users">No other users online</li>';
-        }
+        this.ui.userList.innerHTML = users.length > 0 
+            ? users.map(user => `
+                <li class="user-item">
+                    <span class="online-dot"></span>
+                    ${user}
+                </li>
+            `).join('') 
+            : '<li class="no-users">No other users online</li>';
     }
 
     handleMessageSubmit(e) {
         e.preventDefault();
         const message = this.ui.messageInput.value.trim();
         if (message) {
-            // Mesaj gönderirken kullanıcı adını da gönder
             this.socket.emit('createMessage', { 
                 message,
                 name: sessionStorage.getItem('username')
@@ -195,31 +222,31 @@ class ChatApp {
     }
 
     handleTyping() {
-        let timeout;
         const username = sessionStorage.getItem('username');
-        
-        return () => {
-            if (!this.socket.connected || !username) return;
-            
+        if (!this.socket.connected || !username) return;
+
+        this.socket.emit('typing', { 
+            isTyping: true,
+            name: username
+        });
+
+        clearTimeout(this.typingTimeout);
+        this.typingTimeout = setTimeout(() => {
             this.socket.emit('typing', { 
-                isTyping: true,
+                isTyping: false,
                 name: username
             });
-            
-            clearTimeout(timeout);
-            timeout = setTimeout(() => {
-                this.socket.emit('typing', { 
-                    isTyping: false,
-                    name: username
-                });
-            }, 1000);
-        };
+        }, 1000);
     }
 
     showTypingIndicator(name, isTyping) {
-        this.ui.typingIndicator.textContent = isTyping 
-            ? `${name} is typing...` 
-            : '';
+        const typingIndicatorElement = this.ui.typingIndicator;
+        if (isTyping) {
+            typingIndicatorElement.textContent = `${name} is typing...`;
+            typingIndicatorElement.style.display = 'block'; // Show the indicator
+        } else {
+            typingIndicatorElement.style.display = 'none'; // Hide the indicator
+        }
     }
 }
 
