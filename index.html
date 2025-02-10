@@ -248,6 +248,7 @@
         word-wrap: break-word;
         border-radius: 16px;
         display: inline-block;
+        max-width: 70%;
       }
 
       .message.self {
@@ -261,9 +262,12 @@
       .message.other {
         background: var(--message-other);
         border-radius: 16px 16px 16px 4px;
+        align-self: flex-start;
         display: inline-block;
         padding: 8px 12px;
         margin: 4px 0;
+        max-width: 70%;
+        width: auto;
       }
 
       .message-header {
