@@ -251,9 +251,9 @@ class ChatApp {
         const typingIndicatorElement = this.ui.typingIndicator;
         if (isTyping) {
             typingIndicatorElement.textContent = `${name} is typing...`;
-            typingIndicatorElement.style.display = 'block'; // Show the indicator
+            typingIndicatorElement.classList.add('show');
         } else {
-            typingIndicatorElement.style.display = 'none'; // Hide the indicator
+            typingIndicatorElement.classList.remove('show');
         }
     }
 

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ChatApp | Realtime Messenger</title>
+    <title>ChatX</title>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
@@ -13,19 +13,22 @@
 
     <style>
       :root {
-        --primary-color: #7c3aed;
-        --secondary-color: #5b21b6;
-        --background-color: #f3f4f6;
-        --text-color: #1f2937;
-        --online-dot: #10b981;
-        --system-message: #6b7280;
-        --message-self: #7c3aed;
-        --message-other: #ffffff;
-        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        --gradient-primary: linear-gradient(135deg, #7c3aed, #5b21b6);
-        --gradient-secondary: linear-gradient(135deg, #4f46e5, #7c3aed);
+        --primary-color: #5865f2;
+        --secondary-color: #4752c4;
+        --background-color: #2b2d31;
+        --secondary-background: #232529;
+        --text-color: #dcddde;
+        --text-muted: #949ba4;
+        --online-dot: #23a559;
+        --system-message: #949ba4;
+        --message-self: #5865f2;
+        --message-other: #313338;
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+        --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.2);
+        --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.2);
+        --gradient-primary: linear-gradient(135deg, #5865f2, #4752c4);
+        --gradient-secondary: linear-gradient(135deg, #4752c4, #5865f2);
+        --hover-bg: rgba(255, 255, 255, 0.05);
       }
 
       * {
@@ -36,7 +39,7 @@
 
       body {
         font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        background: var(--background-color);
         color: var(--text-color);
         min-height: 100vh;
       }
@@ -58,9 +61,8 @@
       }
 
       .login-box {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: var(--secondary-background);
+        border: 1px solid rgba(255, 255, 255, 0.05);
         padding: 2.5rem;
         border-radius: 1.5rem;
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
@@ -100,18 +102,19 @@
       .input-group input {
         width: 100%;
         padding: 1rem 2.5rem 1rem 1.5rem;
-        border: 2px solid #e2e8f0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 1rem;
         font-size: 1rem;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        background: rgba(255, 255, 255, 0.9);
+        background: var(--background-color);
+        color: var(--text-color);
       }
 
       .input-group input:focus {
         outline: none;
         border-color: var(--primary-color);
         transform: translateY(-2px);
-        box-shadow: 0 8px 16px rgba(124, 58, 237, 0.1);
+        box-shadow: 0 0 0 2px rgba(88, 101, 242, 0.2);
       }
 
       .input-group i {
@@ -129,7 +132,7 @@
 
       .btn-primary {
         width: 100%;
-        background: var(--gradient-primary);
+        background: var(--primary-color);
         color: white;
         padding: 1rem 1.5rem;
         border: none;
@@ -165,10 +168,9 @@
       .chat-container {
         display: grid;
         grid-template-columns: 280px 1fr;
-        background: rgba(255, 255, 255, 0.98);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        background: var(--secondary-background);
+        border: none;
+        box-shadow: var(--shadow-lg);
         border-radius: 1.5rem;
         height: calc(100vh - 3rem);
         overflow: hidden;
@@ -176,21 +178,23 @@
       }
 
       .sidebar {
-        background: rgba(248, 250, 252, 0.8);
-        border-right: 1px solid rgba(226, 232, 240, 0.5);
+        background: var(--background-color);
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
         padding: 1.5rem;
         display: flex;
         flex-direction: column;
       }
 
       .sidebar-header h2 {
-        font-size: 1.25rem;
+        font-size: 0.9rem;
         font-weight: 700;
-        color: var(--primary-color);
+        color: var(--text-color);
         display: flex;
         align-items: center;
         gap: 0.75rem;
         margin-bottom: 1.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
       }
 
       #userList {
@@ -202,10 +206,10 @@
       }
 
       .user-item {
-        background: rgba(255, 255, 255, 0.7);
-        padding: 1rem 1.25rem;
-        border-radius: 1rem;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: transparent;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.25rem;
+        transition: background-color 0.2s;
         box-shadow: var(--shadow-sm);
         display: flex;
         align-items: center;
@@ -213,8 +217,8 @@
       }
 
       .user-item:hover {
-        transform: translateX(5px);
-        background: rgba(124, 58, 237, 0.1);
+        background: rgba(255, 255, 255, 0.05);
+        transform: none;
       }
 
       .online-dot {
@@ -227,8 +231,8 @@
       }
 
       .messages-container {
-        padding: 1.5rem;
-        background: rgba(248, 250, 252, 0.5);
+        padding: 1rem;
+        background: var(--secondary-background);
         overflow-y: auto;
         display: flex;
         flex-direction: column;
@@ -239,45 +243,47 @@
       }
 
       .message {
-        max-width: 65%;
-        padding: 1rem 1.25rem;
-        border-radius: 1.25rem;
-        box-shadow: var(--shadow-sm);
+        max-width: 90%;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        box-shadow: none;
         animation: messageSlide 0.3s ease;
       }
 
       .message.self {
-        background: var(--gradient-primary);
+        background: var(--message-self);
         color: white;
         align-self: flex-end;
-        border-bottom-right-radius: 0.25rem;
+        border-radius: 1rem 1rem 0 1rem;
         box-shadow: 0 4px 15px rgba(124, 58, 237, 0.2);
       }
 
       .message.other {
-        background: white;
-        border-bottom-left-radius: 0.25rem;
+        background: var(--message-other);
+        border-radius: 1rem 1rem 1rem 0;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
       }
 
       .message-header {
-        font-size: 0.875rem;
+        font-size: 0.8rem;
         font-weight: 600;
         margin-bottom: 0.5rem;
+        color: var(--text-muted);
       }
 
       .message-time {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         opacity: 0.8;
         margin-top: 0.5rem;
         display: block;
         text-align: right;
+        color: var(--text-muted);
       }
 
       .message-input {
-        padding: 20px;
-        background: white;
-        border-top: 1px solid rgba(226, 232, 240, 0.5);
+        padding: 1rem;
+        background: var(--secondary-background);
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
         position: sticky;
         bottom: 0;
       }
@@ -285,9 +291,9 @@
       .message-input-container {
         display: flex;
         align-items: center;
-        background: #f3f4f6;
-        border-radius: 30px;
-        padding: 8px 8px 8px 20px;
+        background: var(--background-color);
+        border-radius: 0.5rem;
+        padding: 0.75rem;
         gap: 10px;
       }
 
@@ -298,6 +304,11 @@
         padding: 8px 0;
         font-size: 0.95rem;
         outline: none;
+        color: var(--text-color);
+      }
+
+      .message-input input::placeholder {
+        color: var(--text-muted);
       }
 
       .send-button {
@@ -324,17 +335,26 @@
       }
 
       .typing-indicator {
-        font-size: 0.875rem;
-        color: var(--system-message);
-        margin-bottom: 8px;
+        display: none;
+        align-items: center;
+        gap: 4px;
+        padding: 8px 12px;
+        background: var(--message-other);
+        border-radius: 16px;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+      }
+
+      .typing-indicator.show {
+        display: inline-flex;
       }
 
       .system-message {
-        background: rgba(100, 116, 139, 0.08);
-        padding: 0.75rem 1rem;
-        border-radius: 0.75rem;
-        font-size: 0.875rem;
-        color: var(--system-message);
+        background: rgba(255, 255, 255, 0.03);
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.25rem;
+        font-size: 0.8rem;
+        color: var(--text-muted);
         max-width: 80%;
         margin: 1rem auto;
         text-align: center;
@@ -371,12 +391,12 @@
 
       @keyframes messageSlide {
         from {
-          transform: translateY(10px);
           opacity: 0;
+          transform: translateY(8px);
         }
         to {
-          transform: translateY(0);
           opacity: 1;
+          transform: translateY(0);
         }
       }
 
@@ -440,30 +460,183 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background: var(--gradient-primary);
+        background: var(--secondary-background);
         color: white;
-        padding: 15px 20px;
-        border-radius: 0.5rem 0.5rem 0 0; /* Rounded top corners */
+        padding: 0.75rem 1rem;
+        border-radius: 0;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
       }
 
       .chat-title {
-        font-size: 1.5rem;
-        font-weight: bold;
+        font-size: 1rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
       }
 
       .username-display {
         font-size: 1rem;
         font-weight: 500;
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.05);
         padding: 5px 10px;
         border-radius: 1rem;
+        color: var(--text-color);
       }
 
       .main-chat {
         display: flex;
         flex-direction: column;
         height: 100%;
+      }
+
+      /* Mesaj animasyonları */
+      @keyframes messageAppear {
+        0% {
+          opacity: 0;
+          transform: translateY(20px) scale(0.95);
+        }
+        60% {
+          transform: translateY(-5px) scale(1.02);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      /* Typing animasyonu */
+      @keyframes typingBounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-2px); }
+      }
+
+      .typing-indicator::after {
+        content: "...";
+        animation: typingBounce 1.4s infinite;
+        letter-spacing: 2px;
+      }
+
+      /* Mesaj stilleri */
+      .message {
+        animation: messageAppear 0.3s ease forwards;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      .message:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .message.self {
+        background: var(--message-self);
+        border-radius: 16px 16px 4px 16px;
+      }
+
+      .message.other {
+        background: var(--message-other);
+        border-radius: 16px 16px 16px 4px;
+      }
+
+      /* Input alanı ve buton animasyonları */
+      .message-input-container {
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      .message-input-container:focus-within {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      .send-button {
+        transition: all 0.2s ease;
+        overflow: hidden;
+      }
+
+      .send-button:hover {
+        transform: scale(1.05);
+        background: var(--secondary-color);
+      }
+
+      .send-button:active {
+        transform: scale(0.95);
+      }
+
+      .send-button i {
+        transition: transform 0.2s;
+      }
+
+      .send-button:hover i {
+        transform: translateX(2px);
+      }
+
+      /* Sistem mesajları */
+      .system-message {
+        animation: fadeIn 0.5s ease;
+        transition: opacity 0.3s;
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(8px);
+      }
+
+      /* Kullanıcı listesi hover efektleri */
+      .user-item {
+        transition: all 0.2s ease;
+      }
+
+      .user-item:hover {
+        background: var(--hover-bg);
+        transform: translateX(4px);
+      }
+
+      /* Responsive düzenlemeler */
+      .messages-container {
+        flex: 1;
+        height: 0; /* Önemli: Scroll için */
+        min-height: 0; /* Önemli: Scroll için */
+      }
+
+      .main-chat {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      /* Smooth scrolling */
+      .messages-container {
+        scroll-behavior: smooth;
+        scrollbar-width: thin;
+        scrollbar-color: var(--primary-color) transparent;
+      }
+
+      .messages-container::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .messages-container::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      .messages-container::-webkit-scrollbar-thumb {
+        background: var(--primary-color);
+        border-radius: 4px;
+      }
+
+      /* Input placeholder animasyonu */
+      .message-input input::placeholder {
+        transition: opacity 0.2s;
+      }
+
+      .message-input input:focus::placeholder {
+        opacity: 0.5;
+      }
+
+      /* Header hover efektleri */
+      .username-display {
+        transition: background-color 0.2s;
+      }
+
+      .username-display:hover {
+        background: var(--hover-bg);
       }
     </style>
   </head>
@@ -472,7 +645,7 @@
       <div class="login-box">
         <div class="logo">
           <i class="fas fa-comments"></i>
-          <h1>ChatApp</h1>
+          <h1>ChatX</h1>
         </div>
         <form id="loginForm">
           <div class="input-group">
@@ -505,7 +678,7 @@
         <div class="main-chat">
           <div class="chat-header">
             <div class="header-left">
-              <h1 class="chat-title">Global Chat Room</h1>
+              <h1 class="chat-title">ChatX</h1>
             </div>
             <div class="header-right">
               <span id="currentUsername" class="username-display"></span>
