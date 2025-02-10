@@ -10,8 +10,7 @@ class ChatApp {
             userList: document.getElementById('userList'),
             messageForm: document.getElementById('messageForm'),
             messageInput: document.getElementById('messageInput'),
-            typingIndicator: document.getElementById('typingIndicator'),
-            logoutBtn: document.getElementById('logoutBtn')
+            typingIndicator: document.getElementById('typingIndicator')
         };
 
         this.initializeSocket();
@@ -34,19 +33,18 @@ class ChatApp {
         this.socket.on('findAllMessages', (messages) => this.loadMessages(messages));
         
         // Kullanıcı listesi güncellemeleri için
-        this.socket.on('userListUpdate', (users) => {
+        this.socket.on('join', (users) => {
+            console.log('Received users:', users); // Debug için log ekledik
             this.updateUserList(users);
         });
         
         // Kullanıcı katılma/ayrılma bildirimleri için
         this.socket.on('userJoined', (name) => {
             this.handleSystemMessage('join', name);
-            this.socket.emit('getUserList');
         });
         
         this.socket.on('userLeft', (name) => {
             this.handleSystemMessage('leave', name);
-            this.socket.emit('getUserList');
         });
 
         this.socket.on('typing', ({ name, isTyping }) => {
@@ -63,7 +61,6 @@ class ChatApp {
         document.getElementById('loginForm').addEventListener('submit', (e) => this.handleLogin(e));
         this.ui.messageForm.addEventListener('submit', (e) => this.handleMessageSubmit(e));
         this.ui.messageInput.addEventListener('input', () => this.handleTyping());
-        this.ui.logoutBtn.addEventListener('click', () => this.handleLogout());
     }
 
     checkExistingSession() {
@@ -85,9 +82,8 @@ class ChatApp {
             this.ui.container.classList.remove('hidden');
             this.ui.currentUsername.textContent = username;
             
-            // İsim ile katıl ve kullanıcı listesini al
+            // İsim ile katıl
             this.socket.emit('join', { name: username });
-            this.socket.emit('getUserList');
         }
     }
 
@@ -140,8 +136,11 @@ class ChatApp {
     }
 
     updateUserList(users) {
+        console.log('Updating user list with:', users); // Debug için log ekledik
+        
         if (!Array.isArray(users)) {
-            this.ui.userList.innerHTML = '';
+            console.error('Invalid users data:', users);
+            this.ui.userList.innerHTML = '<li class="no-users">No users online</li>';
             return;
         }
         
@@ -149,15 +148,14 @@ class ChatApp {
         const currentUser = sessionStorage.getItem('username');
         const filteredUsers = users.filter(user => user !== currentUser);
         
-        this.ui.userList.innerHTML = filteredUsers.map(user => `
-            <li class="user-item">
-                <span class="online-dot"></span>
-                ${user}
-            </li>
-        `).join('');
-        
-        // Eğer hiç kullanıcı yoksa mesaj göster
-        if (filteredUsers.length === 0) {
+        if (filteredUsers.length > 0) {
+            this.ui.userList.innerHTML = filteredUsers.map(user => `
+                <li class="user-item">
+                    <span class="online-dot"></span>
+                    ${user}
+                </li>
+            `).join('');
+        } else {
             this.ui.userList.innerHTML = '<li class="no-users">No other users online</li>';
         }
     }
