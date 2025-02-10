@@ -34,7 +34,11 @@ class ChatApp {
         
         // Kullanıcı listesi güncellemeleri için
         this.socket.on('join', (users) => {
-            console.log('Received users:', users); // Debug için log ekledik
+            console.log('Received users:', users);
+            // Eğer users bir obje ise, array'e çevir
+            if (users && typeof users === 'object' && !Array.isArray(users)) {
+                users = [users];
+            }
             this.updateUserList(users);
         });
         
@@ -136,25 +140,42 @@ class ChatApp {
     }
 
     updateUserList(users) {
-        console.log('Updating user list with:', users); // Debug için log ekledik
+        console.log('Updating user list with:', users);
         
-        if (!Array.isArray(users)) {
-            console.error('Invalid users data:', users);
+        // Eğer users undefined veya null ise
+        if (!users) {
+            console.error('Users data is undefined or null');
             this.ui.userList.innerHTML = '<li class="no-users">No users online</li>';
             return;
         }
-        
+
+        // Eğer users bir array değilse, array'e çevir
+        if (!Array.isArray(users)) {
+            console.warn('Users data is not an array, converting to array');
+            users = [users];
+        }
+
         // Mevcut kullanıcıyı filtrele
         const currentUser = sessionStorage.getItem('username');
-        const filteredUsers = users.filter(user => user !== currentUser);
-        
+        const filteredUsers = users.filter(user => {
+            // Eğer user bir obje ise, name property'sini al
+            if (typeof user === 'object' && user !== null) {
+                return user.name !== currentUser;
+            }
+            return user !== currentUser;
+        });
+
         if (filteredUsers.length > 0) {
-            this.ui.userList.innerHTML = filteredUsers.map(user => `
-                <li class="user-item">
-                    <span class="online-dot"></span>
-                    ${user}
-                </li>
-            `).join('');
+            this.ui.userList.innerHTML = filteredUsers.map(user => {
+                // Eğer user bir obje ise, name property'sini al
+                const userName = typeof user === 'object' ? user.name : user;
+                return `
+                    <li class="user-item">
+                        <span class="online-dot"></span>
+                        ${userName}
+                    </li>
+                `;
+            }).join('');
         } else {
             this.ui.userList.innerHTML = '<li class="no-users">No other users online</li>';
         }
