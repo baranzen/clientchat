@@ -13,8 +13,8 @@ class ChatApp {
             typingIndicator: document.getElementById('typingIndicator')
         };
 
-        this.onlineUsers = new Set(); // Store online users
-        this.typingTimeout = null; // Initialize typing timeout
+        this.onlineUsers = new Set(); // Çevrimiçi kullanıcıları sakla
+        this.typingTimeout = null; // Yazma zaman aşımını başlat
         this.initializeSocket();
         this.initializeEventListeners();
         this.checkExistingSession();
@@ -30,72 +30,72 @@ class ChatApp {
     }
 
     setupSocketEvents() {
-        let hasShownConnectionError = false; // Track if connection error has been shown
+        let hasShownConnectionError = false; // Bağlantı hatası gösterilip gösterilmediğini takip et
 
-        // Handle successful connection
+        // Başarılı bağlantıyı yönet
         this.socket.on('connect', () => {
-            this.handleSystemMessage('system', 'Connected to the server.');
+            this.handleSystemMessage('system', 'Sunucuya bağlandı.');
             this.handleConnect();
-            hasShownConnectionError = false; // Reset the flag on successful connection
+            hasShownConnectionError = false; // Başarılı bağlantıda bayrağı sıfırla
         });
 
-        // Handle disconnection
+        // Bağlantı kesilmesini yönet
         this.socket.on('disconnect', () => {
-            this.handleSystemMessage('system', 'Disconnected from the server. Attempting to reconnect...');
+            this.handleSystemMessage('system', 'Sunucudan bağlantı kesildi. Yeniden bağlanmaya çalışılıyor...');
         });
 
-        // Handle connection errors
+        // Bağlantı hatalarını yönet
         this.socket.on('connect_error', (err) => {
             if (!hasShownConnectionError) {
-                this.handleSystemMessage('system', 'Unable to connect to the server. Retrying...');
-                hasShownConnectionError = true; // Set the flag to prevent repeated messages
+                this.handleSystemMessage('system', 'Sunucuya bağlanılamıyor. Yeniden deniyor...');
+                hasShownConnectionError = true; // Tekrar eden mesajları önlemek için bayrağı ayarla
             }
         });
 
-        // Handle reconnection attempts
+        // Yeniden bağlantı denemelerini yönet
         this.socket.on('reconnect_attempt', (attempt) => {
-            // No need to show a message here unless it's the first attempt
+            // İlk deneme olmadıkça burada bir mesaj göstermeye gerek yok
             if (attempt === 1) {
-                this.handleSystemMessage('system', 'Attempting to reconnect...');
+                this.handleSystemMessage('system', 'Yeniden bağlanmaya çalışılıyor...');
             }
         });
 
-        // Handle successful reconnection
+        // Başarılı yeniden bağlantıyı yönet
         this.socket.on('reconnect', () => {
-            this.handleSystemMessage('system', 'Reconnected to the server.');
+            this.handleSystemMessage('system', 'Sunucuya yeniden bağlandı.');
         });
 
-        // Handle reconnection failure
+        // Yeniden bağlantı hatasını yönet
         this.socket.on('reconnect_failed', () => {
-            this.handleSystemMessage('system', 'Failed to reconnect to the server. Please check your connection and try again.');
+            this.handleSystemMessage('system', 'Sunucuya yeniden bağlanılamadı. Lütfen bağlantınızı kontrol edin ve tekrar deneyin.');
         });
 
-        // Handle incoming messages
+        // Gelen mesajları yönet
         this.socket.on('message', (message) => this.appendMessage(message));
 
-        // Handle initial message load
+        // İlk mesaj yüklemesini yönet
         this.socket.on('findAllMessages', (messages) => this.loadMessages(messages));
         
-        // Handle user joined notifications
+        // Kullanıcı katılım bildirimlerini yönet
         this.socket.on('userJoined', (name) => {
-            this.onlineUsers.add(name); // Add user to online users
-            this.updateUserList(Array.from(this.onlineUsers)); // Update UI
+            this.onlineUsers.add(name); // Kullanıcıyı çevrimiçi kullanıcılara ekle
+            this.updateUserList(Array.from(this.onlineUsers)); // UI'yi güncelle
             this.handleSystemMessage('join', name);
         });
         
-        // Handle user left notifications
+        // Kullanıcı ayrılma bildirimlerini yönet
         this.socket.on('userLeft', (name) => {
-            this.onlineUsers.delete(name); // Remove user from online users
-            this.updateUserList(Array.from(this.onlineUsers)); // Update UI
+            this.onlineUsers.delete(name); // Kullanıcıyı çevrimiçi kullanıcılardan çıkar
+            this.updateUserList(Array.from(this.onlineUsers)); // UI'yi güncelle
             this.handleSystemMessage('leave', name);
         });
 
-        // Handle typing indicators
+        // Yazma göstergelerini yönet
         this.socket.on('typing', ({ name, isTyping }) => {
             this.showTypingIndicator(name, isTyping);
         });
 
-        // Handle logout on page unload
+        // Sayfa yüklenirken çıkışı yönet
         window.addEventListener('beforeunload', () => {
             this.handleLogout();
         });
@@ -127,7 +127,7 @@ class ChatApp {
             this.ui.currentUsername.textContent = username;
             
             this.socket.emit('join', { name: username }, (users) => {
-                console.log('Users:', users);
+                console.log('Kullanıcılar:', users);
                 this.updateUserList(users);
             });
         }
@@ -158,14 +158,23 @@ class ChatApp {
         const isCurrentUser = name === sessionStorage.getItem('username');
         const messageEl = document.createElement('div');
         messageEl.className = `message ${isCurrentUser ? 'self' : 'other'}`;
+
+        // GIF kontrolü - eğer .gif uzantılı bir link varsa
+        const isGif = message.match(/https?:\/\/.*\.gif/i);
+        
+        const messageContent = isGif 
+            ? `<img src="${message}" alt="gif" class="message-gif" />` 
+            : message;
+
         messageEl.innerHTML = `
             <div class="message-header">${name}</div>
-            <div class="message-body">${message}</div>
+            <div class="message-body">
+                ${messageContent}
+            </div>
             <div class="message-time">${new Date().toLocaleTimeString()}</div>
         `;
         this.ui.messagesContainer.appendChild(messageEl);
         
-        // Ensure scroll to bottom after message is added
         setTimeout(() => {
             this.scrollToBottom();
         }, 100);
@@ -175,10 +184,10 @@ class ChatApp {
         let text;
         switch (type) {
             case 'join':
-                text = `${message} joined the chat`;
+                text = `${message} sohbete katıldı`;
                 break;
             case 'leave':
-                text = `${message} left the chat`;
+                text = `${message} sohbetten ayrıldı`;
                 break;
             case 'system':
                 text = message;
@@ -192,18 +201,18 @@ class ChatApp {
         systemEl.textContent = text;
         this.ui.messagesContainer.appendChild(systemEl);
         
-        // Ensure scroll to bottom after system message
+        // Sistem mesajından sonra aşağı kaydırmayı sağla
         setTimeout(() => {
             this.scrollToBottom();
         }, 100);
     }
 
     updateUserList(users) {
-        console.log('Updating user list with:', users);
+        console.log('Kullanıcı listesini güncelliyor:', users);
         
         if (!users) {
-            console.error('Users data is undefined or null');
-            this.ui.userList.innerHTML = '<li class="no-users">No users online</li>';
+            console.error('Kullanıcı verisi tanımsız veya boş');
+            this.ui.userList.innerHTML = '<li class="no-users">Çevrimiçi kullanıcı yok</li>';
             return;
         }
 
@@ -214,7 +223,7 @@ class ChatApp {
                     ${user}
                 </li>
             `).join('') 
-            : '<li class="no-users">No other users online</li>';
+            : '<li class="no-users">Başka çevrimiçi kullanıcı yok</li>';
     }
 
     handleMessageSubmit(e) {
@@ -250,14 +259,21 @@ class ChatApp {
     showTypingIndicator(name, isTyping) {
         const typingIndicatorElement = this.ui.typingIndicator;
         if (isTyping) {
-            typingIndicatorElement.textContent = `${name} is typing...`;
+            typingIndicatorElement.innerHTML = `
+                <span class="typing-text">${name} yazıyor</span>
+                <div class="typing-dots">
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                </div>
+            `;
             typingIndicatorElement.classList.add('show');
         } else {
             typingIndicatorElement.classList.remove('show');
         }
     }
 
-    // Add new helper method for scrolling
+    // Aşağı kaydırma için yeni yardımcı yöntem ekle
     scrollToBottom() {
         if (this.ui.messagesContainer) {
             this.ui.messagesContainer.scrollTo({
@@ -268,5 +284,5 @@ class ChatApp {
     }
 }
 
-// Initialize the chat application
+// Sohbet uygulamasını başlat
 new ChatApp(); 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -243,25 +243,27 @@
       }
 
       .message {
-        max-width: 90%;
-        padding: 0.5rem 1rem;
-        border-radius: 0.5rem;
-        box-shadow: none;
-        animation: messageSlide 0.3s ease;
+        padding: 8px 12px;
+        margin: 4px 0;
+        word-wrap: break-word;
+        border-radius: 16px;
+        display: inline-block;
       }
 
       .message.self {
         background: var(--message-self);
         color: white;
         align-self: flex-end;
-        border-radius: 1rem 1rem 0 1rem;
+        border-radius: 16px 16px 4px 16px;
         box-shadow: 0 4px 15px rgba(124, 58, 237, 0.2);
       }
 
       .message.other {
         background: var(--message-other);
-        border-radius: 1rem 1rem 1rem 0;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        border-radius: 16px 16px 16px 4px;
+        display: inline-block;
+        padding: 8px 12px;
+        margin: 4px 0;
       }
 
       .message-header {
@@ -337,16 +339,50 @@
       .typing-indicator {
         display: none;
         align-items: center;
-        gap: 4px;
-        padding: 8px 12px;
+        gap: 8px;
+        padding: 12px 16px;
         background: var(--message-other);
         border-radius: 16px;
         font-size: 0.85rem;
         color: var(--text-muted);
+        margin: 8px 0;
+        max-width: fit-content;
       }
 
       .typing-indicator.show {
         display: inline-flex;
+      }
+
+      .typing-text {
+        font-weight: 500;
+      }
+
+      .typing-dots {
+        display: flex;
+        gap: 4px;
+      }
+
+      .dot {
+        width: 6px;
+        height: 6px;
+        background: var(--text-muted);
+        border-radius: 50%;
+        opacity: 0.5;
+      }
+
+      .dot:nth-child(1) { animation: typingDot 1.4s infinite 0s; }
+      .dot:nth-child(2) { animation: typingDot 1.4s infinite 0.2s; }
+      .dot:nth-child(3) { animation: typingDot 1.4s infinite 0.4s; }
+
+      @keyframes typingDot {
+        0%, 60%, 100% { 
+          transform: translateY(0);
+          opacity: 0.5;
+        }
+        30% { 
+          transform: translateY(-4px);
+          opacity: 1;
+        }
       }
 
       .system-message {
@@ -638,6 +674,14 @@
       .username-display:hover {
         background: var(--hover-bg);
       }
+
+      /* GIF mesaj stili */
+      .message-gif {
+        max-width: 300px;
+        max-height: 200px;
+        border-radius: 8px;
+        margin: 4px 0;
+      }
     </style>
   </head>
   <body>
@@ -652,13 +696,13 @@
             <input
               type="text"
               id="usernameInput"
-              placeholder="Enter your name"
+              placeholder="Adınızı girin"
               required
             />
             <i class="fas fa-user"></i>
           </div>
           <button type="submit" class="btn-primary">
-            Join Chat <i class="fas fa-arrow-right"></i>
+            Sohbete Katıl <i class="fas fa-arrow-right"></i>
           </button>
         </form>
       </div>
@@ -668,10 +712,10 @@
       <div class="chat-container">
         <div class="sidebar">
           <div class="sidebar-header">
-            <h2><i class="fas fa-users"></i> Online Users</h2>
+            <h2><i class="fas fa-users"></i> Çevrimiçi Kullanıcılar</h2>
           </div>
           <ul id="userList">
-            <li class="no-users">No users online</li>
+            <li class="no-users">Çevrimiçi kullanıcı yok</li>
           </ul>
         </div>
 
@@ -694,7 +738,7 @@
                 <input
                   type="text"
                   id="messageInput"
-                  placeholder="Type your message..."
+                  placeholder="Mesajınızı yazın..."
                   autocomplete="off"
                 />
                 <button type="submit" class="send-button">
