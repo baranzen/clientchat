@@ -21,7 +21,8 @@ class ChatApp {
     }
 
     initializeSocket() {
-        this.socket = io('http://localhost:3001', {
+        // Port belirtmeden, varsayılan 443 üzerinden bağlanır
+        this.socket = io('wss://baranz.com', {
             withCredentials: true,
             transports: ['websocket', 'polling']
         });
@@ -75,14 +76,14 @@ class ChatApp {
 
         // İlk mesaj yüklemesini yönet
         this.socket.on('findAllMessages', (messages) => this.loadMessages(messages));
-        
+
         // Kullanıcı katılım bildirimlerini yönet
         this.socket.on('userJoined', (name) => {
             this.onlineUsers.add(name); // Kullanıcıyı çevrimiçi kullanıcılara ekle
             this.updateUserList(Array.from(this.onlineUsers)); // UI'yi güncelle
             this.handleSystemMessage('join', name);
         });
-        
+
         // Kullanıcı ayrılma bildirimlerini yönet
         this.socket.on('userLeft', (name) => {
             this.onlineUsers.delete(name); // Kullanıcıyı çevrimiçi kullanıcılardan çıkar
@@ -125,7 +126,7 @@ class ChatApp {
             this.ui.loginOverlay.classList.add('hidden');
             this.ui.container.classList.remove('hidden');
             this.ui.currentUsername.textContent = username;
-            
+
             this.socket.emit('join', { name: username }, (users) => {
                 console.log('Kullanıcılar:', users);
                 this.updateUserList(users);
@@ -161,9 +162,9 @@ class ChatApp {
 
         // GIF kontrolü - eğer .gif uzantılı bir link varsa
         const isGif = message.match(/https?:\/\/.*\.gif/i);
-        
-        const messageContent = isGif 
-            ? `<img src="${message}" alt="gif" class="message-gif" />` 
+
+        const messageContent = isGif
+            ? `<img src="${message}" alt="gif" class="message-gif" />`
             : message;
 
         messageEl.innerHTML = `
@@ -174,7 +175,7 @@ class ChatApp {
             <div class="message-time">${new Date().toLocaleTimeString()}</div>
         `;
         this.ui.messagesContainer.appendChild(messageEl);
-        
+
         setTimeout(() => {
             this.scrollToBottom();
         }, 100);
@@ -200,7 +201,7 @@ class ChatApp {
         systemEl.className = 'system-message';
         systemEl.textContent = text;
         this.ui.messagesContainer.appendChild(systemEl);
-        
+
         // Sistem mesajından sonra aşağı kaydırmayı sağla
         setTimeout(() => {
             this.scrollToBottom();
@@ -209,20 +210,20 @@ class ChatApp {
 
     updateUserList(users) {
         console.log('Kullanıcı listesini güncelliyor:', users);
-        
+
         if (!users) {
             console.error('Kullanıcı verisi tanımsız veya boş');
             this.ui.userList.innerHTML = '<li class="no-users">Çevrimiçi kullanıcı yok</li>';
             return;
         }
 
-        this.ui.userList.innerHTML = users.length > 0 
+        this.ui.userList.innerHTML = users.length > 0
             ? users.map(user => `
                 <li class="user-item">
                     <span class="online-dot"></span>
                     ${user}
                 </li>
-            `).join('') 
+            `).join('')
             : '<li class="no-users">Başka çevrimiçi kullanıcı yok</li>';
     }
 
@@ -230,7 +231,7 @@ class ChatApp {
         e.preventDefault();
         const message = this.ui.messageInput.value.trim();
         if (message) {
-            this.socket.emit('createMessage', { 
+            this.socket.emit('createMessage', {
                 message,
                 name: sessionStorage.getItem('username')
             });
@@ -242,14 +243,14 @@ class ChatApp {
         const username = sessionStorage.getItem('username');
         if (!this.socket.connected || !username) return;
 
-        this.socket.emit('typing', { 
+        this.socket.emit('typing', {
             isTyping: true,
             name: username
         });
 
         clearTimeout(this.typingTimeout);
         this.typingTimeout = setTimeout(() => {
-            this.socket.emit('typing', { 
+            this.socket.emit('typing', {
                 isTyping: false,
                 name: username
             });
