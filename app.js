@@ -21,10 +21,15 @@ class ChatApp {
     }
 
     initializeSocket() {
-        // Port belirtmeden, varsayılan 443 üzerinden bağlanır
-        this.socket = io('wss://baranz.com', {
+        // Nginx üzerinden WebSocket bağlantısı
+        this.socket = io('https://baranz.com', {
+            path: '/socket.io', // Nginx'deki yönlendirme ile eşleşmeli
+            transports: ['websocket'], // Sadece WebSocket kullan
             withCredentials: true,
-            transports: ['websocket', 'polling']
+            secure: true, // HTTPS için zorunlu
+            reconnection: true, // Otomatik yeniden bağlanma
+            reconnectionAttempts: 5, // Maksimum 5 deneme
+            reconnectionDelay: 2000 // 2 saniye aralıklarla dene
         });
 
         this.setupSocketEvents();
